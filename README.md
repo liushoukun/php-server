@@ -19,8 +19,8 @@
 ```dockerfile
 FROM ghcr.io/liushoukun/php-server:8.4-fpm-nginx
 
-# 复制应用代码
-COPY . /var/www/html
+# 复制应用代码，并交给运行用户 www-data
+COPY --chown=www-data:www-data . /var/www/html
 ```
 
 FPM/Nginx 的运行方式、端口与健康检查等配置，请参考 [serversideup/php 官方文档](https://serversideup.net/open-source/docker-php/)。
