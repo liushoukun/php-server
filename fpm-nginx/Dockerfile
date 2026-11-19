@@ -9,19 +9,23 @@ FROM serversideup/php:8.4-fpm-nginx
 # 切换到 root 用户安装 PHP 扩展
 USER root
 
-# 安装 PHP 扩展（去重并优化）
-# 注意：原 Dockerfile 中有重复的 bcmath 和 gd，已去重
+# 安装 PHP 扩展（已去重）
+# 基础镜像预装了 phpredis，直接列 redis 会被跳过，导致 igbinary/msgpack
+# 无法编入 phpredis 的序列化器。因此先装序列化扩展，再删除旧 redis
+# 配置与 PECL 注册信息后强制重装 redis。
 RUN install-php-extensions \
     bcmath \
     gd \
     intl \
     mbstring \
     pcntl \
-    redis \
     igbinary \
     msgpack \
     exif \
-    opcache
+    opcache \
+    && rm -f /usr/local/etc/php/conf.d/docker-php-ext-redis.ini \
+             /usr/local/lib/php/.registry/.channel.pecl.php.net/redis.reg \
+    && install-php-extensions redis
 
 # 设置环境变量
 ENV AUTORUN_LARAVEL_STORAGE_LINK=true \
