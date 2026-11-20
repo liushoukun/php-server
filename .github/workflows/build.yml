@@ -5,6 +5,7 @@ on:
     branches: [master]
     paths:
       - 'fpm-nginx/**'
+      - 'cli/**'
       - '.github/workflows/build.yml'
   workflow_dispatch:
 
@@ -19,6 +20,18 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - variant: fpm-nginx
+            tag: 8.4-fpm-nginx
+            latest: true
+            sha_suffix: ''
+          - variant: cli
+            tag: 8.4-cli
+            latest: false
+            sha_suffix: '-cli'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -48,18 +61,18 @@ jobs:
             ${{ env.GHCR_IMAGE }}
             ${{ env.DOCKERHUB_IMAGE }}
           tags: |
-            type=raw,value=8.4-fpm-nginx
-            type=raw,value=latest
-            type=sha,prefix=sha-,format=short
+            type=raw,value=${{ matrix.tag }}
+            type=raw,value=latest,enable=${{ matrix.latest }}
+            type=sha,prefix=sha-,format=short,suffix=${{ matrix.sha_suffix }}
 
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: ./fpm-nginx
-          file: ./fpm-nginx/Dockerfile
+          context: ./${{ matrix.variant }}
+          file: ./${{ matrix.variant }}/Dockerfile
           platforms: linux/amd64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=${{ matrix.variant }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.variant }}
