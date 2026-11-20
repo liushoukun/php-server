@@ -6,6 +6,7 @@
 
 | 镜像地址 | 基础镜像 | 说明 |
 | --- | --- | --- |
+| `liushoukun/php-server:8.4-fpm-nginx` | `serversideup/php:8.4-fpm-nginx` | PHP 8.4 + PHP-FPM + Nginx，Docker Hub |
 | `ghcr.io/liushoukun/php-server:8.4-fpm-nginx` | `serversideup/php:8.4-fpm-nginx` | PHP 8.4 + PHP-FPM + Nginx |
 
 标签说明：
@@ -17,7 +18,7 @@
 ## 快速使用
 
 ```dockerfile
-FROM ghcr.io/liushoukun/php-server:8.4-fpm-nginx
+FROM liushoukun/php-server:8.4-fpm-nginx
 
 # 复制应用代码，并交给运行用户 www-data
 COPY --chown=www-data:www-data . /var/www/html
@@ -51,7 +52,7 @@ FPM/Nginx 的运行方式、端口与健康检查等配置，请参考 [serversi
 .
 ├── .github/
 │   └── workflows/
-│       └── build.yml      # 构建并发布镜像到 GHCR
+│       └── build.yml      # 构建并发布镜像到 GHCR 和 Docker Hub
 └── fpm-nginx/
     └── Dockerfile         # 镜像定义
 ```
@@ -64,7 +65,18 @@ FPM/Nginx 的运行方式、端口与健康检查等配置，请参考 [serversi
 
 ## 发布说明
 
-- 当 `fpm-nginx/**` 或 `.github/workflows/build.yml` 发生变更并推送到 `master` 时，自动构建并推送镜像到 `ghcr.io/liushoukun/php-server`
+- 当 `fpm-nginx/**` 或 `.github/workflows/build.yml` 发生变更并推送到 `master` 时，自动构建并推送镜像到 GHCR 和 Docker Hub
 - 镜像平台：`linux/amd64`
 - 生成标签：`8.4-fpm-nginx`、`latest`、`sha-<短提交哈希>`
 - 首次发布后，需要到 GitHub 仓库的 **Packages** 页面将包可见性设置为 **Public**，否则其他项目无法匿名拉取
+
+### Docker Hub 配置
+
+在 GitHub 仓库的 **Settings > Secrets and variables > Actions** 中添加以下 Repository secrets：
+
+| Secret | 值 |
+| --- | --- |
+| `DOCKERHUB_USERNAME` | Docker Hub 用户名，例如 `liushoukun` |
+| `DOCKERHUB_TOKEN` | Docker Hub 的 Personal Access Token，需要 `Read & Write` 权限 |
+
+同时需要在 Docker Hub 创建名为 `php-server` 的镜像仓库。如果 Docker Hub 用户名与 GitHub 用户名不同，请同步修改 README 中的镜像地址；流水线会根据 `DOCKERHUB_USERNAME` 自动使用正确的命名空间。
